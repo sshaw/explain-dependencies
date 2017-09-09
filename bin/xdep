@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require "optparse"
+require "xdep"
+
+options = {
+  :add    => false,
+  :format => :csv,
+  :ignore => false
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "usage: #{File.basename($0)} [-ai] [-f format] [file or directory...]"
+
+  opts.on "-a", "--add", "Add explanations to the dependency file, if possible" do
+    options[:add] = true
+    options[:format] = :source
+  end
+
+  opts.on "-f", "--format=NAME", %w[csv source], "Output format for explanations (csv or source), defaults to csv" do |f|
+    options[:format] = f.to_sym
+  end
+
+  opts.on "-i", "--ignore-popular", "Ignore popular dependencies" do |n|
+    options[:ignore] = true
+  end
+
+  opts.on "-v", "--version", "Display version number" do
+    puts "v#{XDep::VERSION}"
+    exit
+  end
+end
+
+parser.parse!
+
+sources = ARGV
+sources = [Dir.pwd] unless sources.any?
+
+puts "Checking dependencies..."
+XDep.new(options).process(sources)
+puts "Done"
