@@ -6,6 +6,10 @@ class XDep
       @options = options || {}
     end
 
+    def self.accepts?(filename)
+      raise NotImplementedError
+    end
+
     protected
 
     def known_dependencies(name)

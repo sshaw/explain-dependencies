@@ -30,7 +30,8 @@ dependency, ignoring well-known dependencies:
 
 ## Supported Projects
 
-Currently only supports projects with `Gemfile` and `package.json`.
+* Ruby: Gemfile, gemspec
+* Node: package.json
 
 ## TODO
 

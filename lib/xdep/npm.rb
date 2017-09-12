@@ -8,6 +8,10 @@ class XDep
       # TODO
       KNOWN_DEPENDENCIES = []
 
+      def self.accepts?(filename)
+        filename == "package.json"
+      end
+
       protected
 
       def known_dependencies

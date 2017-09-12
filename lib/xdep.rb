@@ -1,8 +1,8 @@
 require "fileutils"
 require "tempfile"
 
-require "xdep/bundler"
 require "xdep/npm"
+require "xdep/ruby"
 require "xdep/version"
 
 class XDep
@@ -12,19 +12,9 @@ class XDep
   REPORT_EXTENSION = ".explained".freeze
 
   FORMAT_HANDLERS = {
-    :csv => {
-      # TODO: put these in XDep::XXXX
-      "Gemfile" => XDep::Bundler::CSVOutput,
-      "gems.rb" => XDep::Bundler::CSVOutput,
-      "package.json" => XDep::Npm::CSVOutput
-    },
-    :source => {
-      "Gemfile" => XDep::Bundler::GemfileOutput,
-      "gems.rb" => XDep::Bundler::GemfileOutput
-    },
+    :csv    => [ Bundler::CSVOutput, RubyGems::CSVOutput, Npm::CSVOutput ],
+    :source => [ Bundler::GemfileOutput, RubyGems::GemspecOutput ]
   }
-
-  VALID_SOURCES = FORMAT_HANDLERS.values.map(&:keys).flatten.uniq
 
   def initialize(options = nil)
     @options = options || {}
@@ -45,23 +35,14 @@ class XDep
 
   private
 
-  def create_handler(filename)
-    klass = FORMAT_HANDLERS[@format][filename]
-    raise Error, "#{filename} does not support format #@format" unless klass
-    klass.new(@options)
-  end
-
   def output_as_original(sources)
-    handlers = {}
+    handlers = create_handlers(sources)
 
     sources.each do |source|
-      basename = File.basename(source)
-      handlers[basename] ||= create_handler(basename)
-
       File.open(source) do |input|
         output = Tempfile.new(REPORT_BASENAME)
         begin
-          handlers[basename].process(input, output)
+          handlers[File.basename(source)].process(input, output)
           output.close # On Win files must be closed before moving.
           dest = source
           dest += REPORT_EXTENSION unless @options[:add]
@@ -74,11 +55,7 @@ class XDep
   end
 
   def output_as_csv(sources)
-    handlers = sources.each_with_object({}) do |source, h|
-      basename = File.basename(source)
-      h[basename] ||= create_handler(basename)
-    end
-
+    handlers = create_handlers(sources)
     report = File.open("#{REPORT_BASENAME}.csv", "w")
 
     begin
@@ -100,7 +77,7 @@ class XDep
         find_sources(source)
       elsif !File.file?(source)
         raise ArgumentError, "No such file: #{source}"
-      elsif !VALID_SOURCES.include?(File.basename(source))
+      elsif find_handler(File.basename(source)).nil?
         raise ArgumentError, "Don't know how to process: #{source}"
       else
         source
@@ -108,7 +85,23 @@ class XDep
     end
   end
 
+  def create_handlers(sources)
+    sources.each_with_object({}) do |source, h|
+      basename = File.basename(source)
+      unless h.include?(basename)
+        klass = find_handler(basename)
+        raise Error, "#{basename} does not support format #@format" unless klass
+
+        h[basename] = klass.new(@options)
+      end
+    end
+  end
+
+  def find_handler(filename)
+    FORMAT_HANDLERS[@format].find { |handler| handler.accepts?(filename) }
+  end
+
   def find_sources(root)
-    VALID_SOURCES.map { |name| File.join(root, name) }.select { |path| File.file?(path) }
+    Dir[ File.join(root, "*") ].reject { |path| find_handler(File.basename(path)).nil? }
   end
 end
