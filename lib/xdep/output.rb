@@ -22,7 +22,7 @@ class XDep
   end
 
   class CSVOutput < Output
-    HEADER = %w[Language Name Version Description].freeze
+    HEADER = %w[Language Name Version Description Homepage License].freeze
 
     def process(input, output)
       rows = get_rows(input)

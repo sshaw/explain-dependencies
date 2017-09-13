@@ -58,9 +58,8 @@ class XDep
 
       def find_spec(name)
         Gem::Specification.find_by_name(name)
-      rescue SPEC_MISSING => e
-        warn "WARNING: #{e}: #{name}"
-        nil
+      rescue SPEC_MISSING
+        raise Error, "Cannot find dependency #{name}; is it installed locally?"
       end
     end
 
@@ -84,7 +83,7 @@ class XDep
           if spec.nil?
             row = [$3, nil, "Gem not found"]
           else
-            row = [spec.name, spec.version.to_s, spec.summary]
+            row = [spec.name, spec.version.to_s, spec.summary, spec.homepage, spec.license]
           end
 
           row.unshift "Ruby"

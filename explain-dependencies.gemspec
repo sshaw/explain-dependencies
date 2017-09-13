@@ -6,6 +6,7 @@ Gem::Specification.new do |s|
   s.version     = XDep::VERSION
   s.date        = Date.today
   s.summary     = "Explains what your project's dependencies are."
+  s.description = "Explains what your project's dependencies are. Export to CSV or add descriptions as code comments."
   s.authors     = ["Skye Shaw"]
   s.email       = "skye.shaw@gmail.com"
   s.executables  << "xdep"

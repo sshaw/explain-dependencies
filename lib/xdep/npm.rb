@@ -4,8 +4,6 @@ require "xdep/output"
 class XDep
   module Npm
     class CSVOutput < XDep::CSVOutput
-      NPM_INFO = /=\s*(["'])(.+)\1/
-      # TODO
       KNOWN_DEPENDENCIES = []
 
       def self.accepts?(filename)
@@ -20,20 +18,13 @@ class XDep
 
       def get_rows(input)
         rows = []
-        spec = JSON.load(input)
 
-        spec.values_at("dependencies", "devDependencies").compact.each do |deps|
-          deps.keys.each do |dep|
-            # TODO: this can take a while...
-            m = npm(dep).scan(NPM_INFO).map(&:last)
-            if m.any?
-              row = [ dep, m[0], m[1] ]
-            else
-              row = [ dep, nil, "Error: #{out}" ]
-            end
-
-            row.unshift "JavaScript"
-            rows << row
+        Dir.chdir(File.dirname(input.path)) do
+          # This is very slow...
+          ls.each do |name, version|
+            info = describe("#{name}@#{version["version"]}")
+            license = info["licenses"] ? format_licenses(info["licenses"]) : info["license"]
+            rows << [ "JavaScript", name, version["version"], info["description"], info["homepage"], license ]
           end
         end
 
@@ -42,11 +33,31 @@ class XDep
 
       private
 
-      def npm(dep)
-        # TODO: check for yarn
-        out = `npm view -g #{dep} version description 2>&1`
+      def ls
+        out = `npm ls --depth=0 --json 2>&1`
         raise Error, "Failed to execute npm: #{out}" unless $?.exitstatus.zero?
-        out
+        parse_json(out)["dependencies"]
+      end
+
+      def describe(pkg)
+        # Include license and licenses else we won't get JSON output if one doesn't exist
+        out = `npm view #{pkg} description homepage license licenses --json 2>&1`
+        raise Error, "Failed to execute npm: #{out}" unless $?.exitstatus.zero?
+        parse_json(out)
+      end
+
+      def parse_json(out)
+        JSON.parse(out)
+      rescue JSON::ParserError => e
+        raise Error, "Failed to parse npm output: #{e}"
+      end
+
+      def format_licenses(licenses)
+        licenses.map do |data|
+          s = data["type"]
+          s << " (#{data["url"]})" if data["url"]
+          s
+        end.join(", ")
       end
     end
   end

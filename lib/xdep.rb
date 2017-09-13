@@ -42,6 +42,7 @@ class XDep
       File.open(source) do |input|
         output = Tempfile.new(REPORT_BASENAME)
         begin
+          # TODO: Not sure this is the right interface
           handlers[File.basename(source)].process(input, output)
           output.close # On Win files must be closed before moving.
           dest = source
@@ -78,7 +79,7 @@ class XDep
       elsif !File.file?(source)
         raise ArgumentError, "No such file: #{source}"
       elsif find_handler(File.basename(source)).nil?
-        raise ArgumentError, "Don't know how to process: #{source}"
+        raise ArgumentError, "Don't know how to output #{source} in #@format format"
       else
         source
       end
