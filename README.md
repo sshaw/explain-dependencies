@@ -1,6 +1,17 @@
 # Explain Dependencies
 
-Explains what your project's dependencies are. Export to various formats.
+Explains what your project's dependencies are.
+
+
+## Installation
+
+[Ruby](https://www.ruby-lang.org/en/downloads/) is required. Once it's installed run:
+
+    gem install explain-dependencies
+
+If you're using [Bundler](http://bundler.io/):
+
+    gem "explain-dependencies", :group => :development
 
 ## Usage
 
@@ -9,16 +20,17 @@ Explains what your project's dependencies are. Export to various formats.
       -i, --ignore-popular             Ignore popular dependencies
       -f, --format=NAME                Output format for explanations (csv or source), defaults to csv
 
-Currently your dependencies must be installed in order to describe them.
+Your dependencies must be installed in order to describe them.
 
 ### Output Formats
 
-Explain Dependencies can output to CSV or add descriptions as code comments.
+Explain Dependencies can output to CSV or add descriptions to the
+dependency file.
 
 CSV output will contain the following columns: Language, Name,
 Version, Description, Homepage, License
 
-Source output adds the dependency's description as a code comment
+Source output adds the dependency's description as a comment
 directly above the line that's including it. This is not supported for
 all output formats.
 

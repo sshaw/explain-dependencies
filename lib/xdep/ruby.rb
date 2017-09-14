@@ -83,7 +83,7 @@ class XDep
           if spec.nil?
             row = [$3, nil, "Gem not found"]
           else
-            row = [spec.name, spec.version.to_s, spec.summary, spec.homepage, spec.license]
+            row = [spec.name, spec.version.to_s, spec.summary, spec.homepage, spec.licenses.join(", ")]
           end
 
           row.unshift "Ruby"
